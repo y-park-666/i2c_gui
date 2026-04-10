@@ -46,9 +46,13 @@ class JobConfig:
     ws_addresses: list[int | None]
 
 
+STATIC_DIR = BASE_DIR / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+
 app = FastAPI(title="ETROC2 Measurement GUI")
 templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 app.mount("/artifacts", StaticFiles(directory=str(ARTIFACT_ROOT)), name="artifacts")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 _jobs: dict[str, dict] = {}
 _jobs_lock = threading.Lock()

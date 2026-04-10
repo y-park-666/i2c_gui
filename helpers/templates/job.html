@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ job.config.batch_name }} - ETROC2 Measurement GUI</title>
-  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="/static/plotly.min.js"></script>
+  <!-- CDN fallback if local copy is missing -->
+  <script>if (typeof Plotly === 'undefined') { document.write('<scr' + 'ipt src="https://cdn.plot.ly/plotly-2.35.2.min.js"><\/scr' + 'ipt>'); }</script>
   <style>
     :root {
       --bg: #f2f4ef;
