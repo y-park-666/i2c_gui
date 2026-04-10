@@ -17,6 +17,7 @@ Use this when you want script-based measurement without the browser UI.
 Example:
 ```bash
 cd <repo root>
+source .venv/bin/activate   # activate venv if not already active
 python helpers/i2c_test_with_rpi.py
 ```
 
@@ -25,13 +26,18 @@ This uses the Raspberry Pi I2C backend (`use_usb_iss=False`) and saves artifacts
 ### 2. Run the browser GUI on localhost
 Use this when you want to launch measurement from a browser and see results as plots.
 
-Install browser dependencies:
+**First-time setup — create a virtual environment** (required on Raspberry Pi OS Bookworm and any system with an externally-managed Python):
 ```bash
 cd <repo root>
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r helpers/browser_requirements.txt
 ```
 
-Start the server:
+> The `.venv` folder is gitignored. You only need to create it once.
+> On subsequent sessions just run `source .venv/bin/activate` before starting the server.
+
+Start the server (venv must be active):
 ```bash
 uvicorn helpers.browser_gui:app --host 127.0.0.1 --port 8000
 ```
@@ -41,12 +47,12 @@ Open:
 http://127.0.0.1:8000
 ```
 
-If you want other machines on the same network to access it, run:
+If you want other machines on the same network to access it (e.g. view from your laptop while the Pi runs the measurement):
 ```bash
 uvicorn helpers.browser_gui:app --host 0.0.0.0 --port 8000
 ```
 
-Then open:
+Then open on your laptop:
 ```text
 http://<raspberry-pi-ip>:8000
 ```
@@ -118,6 +124,15 @@ i2cdetect -y 1
 ```
 
 ## If it does not work
+
+### `error: externally-managed-environment` when running pip
+Raspberry Pi OS Bookworm (and recent Debian/Ubuntu) blocks system-wide pip installs.
+Use a virtual environment instead:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r helpers/browser_requirements.txt
+```
 
 ### `ModuleNotFoundError: fastapi`
 Install:
