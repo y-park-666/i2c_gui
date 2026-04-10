@@ -12,7 +12,10 @@ import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
 
-from i2c_rpi_helper import RPI_I2C_Helper
+try:
+    from .i2c_rpi_helper import RPI_I2C_Helper
+except ImportError:
+    from i2c_rpi_helper import RPI_I2C_Helper
 
 
 class i2c_connection():
