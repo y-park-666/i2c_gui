@@ -346,3 +346,75 @@ def job_api(job_id: str):
     job = _job_snapshot(job_id)
     job["result"] = _decorate_result(job.get("result"))
     return job
+
+
+# ---------------------------------------------------------------------------
+# History: browse and view saved batches from disk
+# ---------------------------------------------------------------------------
+
+def _list_saved_batches() -> list[dict]:
+    """Scan ARTIFACT_ROOT for batch directories that have a saved JSON summary."""
+    batches = []
+    for batch_dir in sorted(ARTIFACT_ROOT.iterdir(), reverse=True):
+        if not batch_dir.is_dir():
+            continue
+        json_path = batch_dir / "json" / "batch_summary.json"
+        if not json_path.exists():
+            continue
+        try:
+            with open(json_path, encoding="utf-8") as f:
+                summary = json.load(f)
+            batch_meta = summary.get("batch", {})
+            batches.append({
+                "batch_id": batch_dir.name,
+                "batch_name": batch_meta.get("batch_name", batch_dir.name),
+                "batch_started_at": batch_meta.get("batch_started_at", ""),
+                "note": batch_meta.get("note", ""),
+                "chip_count": len(summary.get("chips", [])),
+            })
+        except Exception:
+            continue
+    return batches
+
+
+def _load_batch_summary(batch_id: str) -> dict:
+    """Load a saved batch summary JSON and attach artifact URLs."""
+    batch_dir = ARTIFACT_ROOT / batch_id
+    json_path = batch_dir / "json" / "batch_summary.json"
+    if not json_path.exists():
+        raise HTTPException(status_code=404, detail="Batch not found")
+
+    with open(json_path, encoding="utf-8") as f:
+        summary = json.load(f)
+
+    raw_dir = batch_dir / "raw"
+    figure_dir = batch_dir / "figures"
+    summary["artifacts"] = {
+        "batch_dir": str(batch_dir),
+        "raw_dir": str(raw_dir) if raw_dir.exists() else None,
+        "figure_dir": str(figure_dir) if figure_dir.exists() else None,
+        "json_path": str(json_path),
+        "sqlite_path": None,
+    }
+    return summary
+
+
+@app.get("/history")
+def history_list(request: Request):
+    batches = _list_saved_batches()
+    return templates.TemplateResponse(request, "history.html", {"batches": batches})
+
+
+@app.get("/history/{batch_id}")
+def history_detail(request: Request, batch_id: str):
+    summary = _load_batch_summary(batch_id)
+    decorated = _decorate_result(summary)
+    chart_payload = json.dumps(decorated) if decorated else None
+    return templates.TemplateResponse(
+        request,
+        "batch.html",
+        {
+            "decorated_result": decorated,
+            "chart_payload": chart_payload,
+        },
+    )

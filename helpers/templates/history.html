@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Saved Batches - ETROC2 GUI</title>
+  <style>
+    :root {
+      --bg: #f4f1e8;
+      --panel: #fffaf0;
+      --ink: #1b1f23;
+      --muted: #5f6b76;
+      --accent: #0a6c74;
+      --line: #d7d0bf;
+    }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #efe9d8 0%, #f8f5ec 100%);
+      color: var(--ink);
+    }
+    .shell {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 20px 56px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .topbar a { color: var(--accent); text-decoration: none; font-weight: 700; }
+    h1 { margin: 0 0 6px; font-size: 1.8rem; }
+    .hint { color: var(--muted); margin: 0 0 24px; }
+    .batch-list { display: grid; gap: 14px; }
+    .batch {
+      background: rgba(255, 250, 240, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .batch-name { font-weight: 700; font-size: 1.05rem; }
+    .batch-meta { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+    .batch a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .empty { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <a href="/">← Back to launcher</a>
+    </div>
+
+    <h1>Saved Batches</h1>
+    <p class="hint">Batches saved to <code>helpers/output/browser_batches/</code>. Click to view plots.</p>
+
+    {% if batches %}
+      <div class="batch-list">
+        {% for b in batches %}
+          <div class="batch">
+            <div>
+              <div class="batch-name">{{ b.batch_name }}</div>
+              <div class="batch-meta">
+                {{ b.batch_started_at[:19]|replace("T", " ") if b.batch_started_at else "—" }}
+                &nbsp;·&nbsp; {{ b.chip_count }} chip{{ "s" if b.chip_count != 1 else "" }}
+                {% if b.note %}&nbsp;·&nbsp; {{ b.note }}{% endif %}
+              </div>
+            </div>
+            <a href="/history/{{ b.batch_id }}">View plots →</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty">No saved batches found. Run a measurement first.</p>
+    {% endif %}
+  </main>
+</body>
+</html>

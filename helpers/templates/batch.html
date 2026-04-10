@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ decorated_result.batch.batch_name }} - ETROC2 GUI</title>
+  <script src="/static/plotly.min.js"></script>
+  <script>if (typeof Plotly === 'undefined') { document.write('<scr' + 'ipt src="https://cdn.plot.ly/plotly-2.35.2.min.js"><\/scr' + 'ipt>'); }</script>
+  <style>
+    :root {
+      --bg: #f2f4ef;
+      --panel: #fbfcf8;
+      --ink: #16212b;
+      --muted: #5f6d79;
+      --accent: #0f6878;
+      --accent-soft: #d9edf1;
+      --line: #d8dde0;
+      --good: #1c7845;
+    }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #eef3f2 0%, #f8faf7 100%);
+    }
+    .shell { max-width: 1200px; margin: 0 auto; padding: 30px 20px 56px; }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .topbar a { color: var(--accent); text-decoration: none; font-weight: 700; }
+    .hero {
+      background: rgba(251, 252, 248, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 18px 40px rgba(52, 74, 82, 0.08);
+      margin-bottom: 18px;
+    }
+    .hero h1 { margin: 0 0 8px; font-size: 2rem; }
+    .meta { color: var(--muted); display: flex; flex-wrap: wrap; gap: 16px; }
+    .panel {
+      background: rgba(251, 252, 248, 0.92);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 14px 30px rgba(52, 74, 82, 0.07);
+      margin-bottom: 18px;
+    }
+    .panel h2 { margin-top: 0; font-size: 1.15rem; }
+    .artifact-list { display: grid; gap: 10px; }
+    .artifact-list a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.95rem; }
+    .table th, .table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    .table th { color: var(--muted); font-weight: 700; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .chip-section { margin-top: 8px; }
+    .plot-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .plot-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+    }
+    @media (max-width: 900px) {
+      .grid, .plot-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <a href="/history">← Back to saved batches</a>
+    </div>
+
+    <section class="hero">
+      <h1>{{ decorated_result.batch.batch_name }}</h1>
+      <div class="meta">
+        <span>Started: {{ decorated_result.batch.batch_started_at[:19]|replace("T", " ") }}</span>
+        <span>ID: {{ decorated_result.batch.batch_id }}</span>
+        {% if decorated_result.batch.note %}<span>Note: {{ decorated_result.batch.note }}</span>{% endif %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Artifacts</h2>
+      <div class="artifact-list">
+        {% if decorated_result.artifacts.json_url %}
+          <a href="{{ decorated_result.artifacts.json_url }}">Batch JSON summary</a>
+        {% endif %}
+        {% for item in decorated_result.artifacts.csv_files %}
+          <a href="{{ item.url }}">{{ item.name }}</a>
+        {% endfor %}
+      </div>
+    </section>
+
+    {% for chip in decorated_result.chips %}
+      <section class="panel chip-section">
+        <h2>{{ chip.chip_name }} ({{ "0x%02x"|format(chip.chip_address) }})</h2>
+        <table class="table">
+          <tr><th>Baseline mean</th><td>{{ "%.2f"|format(chip.stats.baseline.mean) if chip.stats.baseline.mean is not none else "—" }}</td></tr>
+          <tr><th>Baseline std</th><td>{{ "%.2f"|format(chip.stats.baseline.std) if chip.stats.baseline.std is not none else "—" }}</td></tr>
+          <tr><th>Noise width mean</th><td>{{ "%.2f"|format(chip.stats.noise_width.mean) if chip.stats.noise_width.mean is not none else "—" }}</td></tr>
+          <tr><th>Noise width std</th><td>{{ "%.2f"|format(chip.stats.noise_width.std) if chip.stats.noise_width.std is not none else "—" }}</td></tr>
+        </table>
+
+        <div class="plot-grid" style="margin-top: 18px;">
+          <div class="plot-card"><div id="baseline-heatmap-{{ loop.index0 }}"></div></div>
+          <div class="plot-card"><div id="noise-heatmap-{{ loop.index0 }}"></div></div>
+          <div class="plot-card"><div id="baseline-hist-{{ loop.index0 }}"></div></div>
+          <div class="plot-card"><div id="noise-hist-{{ loop.index0 }}"></div></div>
+        </div>
+      </section>
+    {% endfor %}
+  </main>
+
+  {% if chart_payload %}
+    <script>
+      const payload = {{ chart_payload|safe }};
+      payload.chips.forEach((chip, index) => {
+        const baselineRecords = chip.records.map(r => r.baseline);
+        const noiseRecords = chip.records.map(r => r.noise_width);
+        const rows = [...Array(chip.heatmaps.baseline.length).keys()];
+        const cols = [...Array((chip.heatmaps.baseline[0] || []).length).keys()];
+
+        Plotly.newPlot(`baseline-heatmap-${index}`, [{
+          z: chip.heatmaps.baseline, x: cols, y: rows,
+          type: "heatmap", colorscale: "Viridis", colorbar: {title: "BL"}
+        }], {title: `${chip.chip_name} baseline`, margin: {t: 48, r: 16, b: 48, l: 48}}, {responsive: true});
+
+        Plotly.newPlot(`noise-heatmap-${index}`, [{
+          z: chip.heatmaps.noise_width, x: cols, y: rows,
+          type: "heatmap", colorscale: "Cividis", colorbar: {title: "NW"}
+        }], {title: `${chip.chip_name} noise width`, margin: {t: 48, r: 16, b: 48, l: 48}}, {responsive: true});
+
+        Plotly.newPlot(`baseline-hist-${index}`, [{
+          x: baselineRecords, type: "histogram", marker: {color: "#0f6878"}
+        }], {
+          title: `${chip.chip_name} baseline histogram`,
+          margin: {t: 48, r: 16, b: 48, l: 48},
+          xaxis: {title: "Baseline"}, yaxis: {title: "Count"}
+        }, {responsive: true});
+
+        Plotly.newPlot(`noise-hist-${index}`, [{
+          x: noiseRecords, type: "histogram", marker: {color: "#a2612a"}
+        }], {
+          title: `${chip.chip_name} noise width histogram`,
+          margin: {t: 48, r: 16, b: 48, l: 48},
+          xaxis: {title: "Noise width"}, yaxis: {title: "Count"}
+        }, {responsive: true});
+      });
+    </script>
+  {% endif %}
+</body>
+</html>
