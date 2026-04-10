@@ -570,40 +570,10 @@ class i2c_connection():
         for key, value in pixel_config.items():
             chip.set_decoded_value("ETROC2", "Pixel Config", key, value)
 
-        try:
-            chip.broadcast = True
-            chip.write_all_block("ETROC2", "Pixel Config")
-            chip.broadcast = False
-            print(f"Disabled pixels (Bypass, TH-3f DAC-3ff) for chip: {hex(chip_address)}")
-
-            print('Verifying Broadcast results')
-            for row in tqdm(range(16), desc="Checking broadcast for row", position=0):
-                for col in range(16):
-                    chip.row = row
-                    chip.col = col
-
-                    chip.read_all_block("ETROC2", "Pixel Config")
-
-                    for key, value in pixel_config.items():
-                        if chip.get_decoded_value("ETROC2", "Pixel Config", key) != value:
-                            raise RuntimeError("Failed to verify broadcast results")
-
-        except RuntimeError as err:
-            print(err)
-            print("Broadcast failed! Will manually disable pixels\n")
-            for row in tqdm(range(16), desc="Disabling row", position=0):
-                for col in range(16):
-                    chip.row = row
-                    chip.col = col
-
-                    chip.read_all_block("ETROC2", "Pixel Config")
-
-                    for key, value in pixel_config.items():
-                        chip.set_decoded_value("ETROC2", "Pixel Config", key, value)
-
-                    chip.write_all_block("ETROC2", "Pixel Config")
-
-            print(f"Disabled pixels (Bypass, TH-3f DAC-3ff) for chip: {hex(chip_address)}")
+        chip.broadcast = True
+        chip.write_all_block("ETROC2", "Pixel Config")
+        chip.broadcast = False
+        print(f"Disabled pixels (Bypass, TH-3f DAC-3ff) for chip: {hex(chip_address)}")
 
     def auto_calibration(self, chip_address, chip_name, chip: i2c_gui2.ETROC2_Chip = None, ver_on: bool = False):
 
