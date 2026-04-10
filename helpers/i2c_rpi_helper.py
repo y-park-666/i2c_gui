@@ -65,15 +65,15 @@ class RPI_I2C_Helper(I2C_Connection_Helper):
         device_address: int,
         word_address: int,
         byte_data: list[int],
+        register_bits: int = 16,
         write_type: str = "Normal",
-        address_bitlength: int = 8,
     ):
         if self._no_connect:
             return
 
         assert self._bus is not None
 
-        addr_nbytes = ceil(address_bitlength / 8)
+        addr_nbytes = ceil(register_bits / 8)
         addr_bytes = list(word_address.to_bytes(addr_nbytes, byteorder="big", signed=False))
 
         # Most register-memory devices expect: [reg_addr_bytes..., data...]
@@ -87,15 +87,15 @@ class RPI_I2C_Helper(I2C_Connection_Helper):
         device_address: int,
         word_address: int,
         byte_count: int,
+        register_bits: int = 16,
         read_type: str = "Normal",
-        address_bitlength: int = 8,
     ) -> list[int]:
         if self._no_connect:
             return [0] * byte_count
 
         assert self._bus is not None
 
-        addr_nbytes = ceil(address_bitlength / 8)
+        addr_nbytes = ceil(register_bits / 8)
         addr_bytes = list(word_address.to_bytes(addr_nbytes, byteorder="big", signed=False))
 
         # Typical repeated-start register read:
