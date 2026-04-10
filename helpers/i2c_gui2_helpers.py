@@ -34,6 +34,11 @@ class i2c_connection():
         logger = logging.getLogger("Script_Logger")
         self.chip_logger = logging.getLogger("Chip_Logger")
         if use_usb_iss:
+            if i2c_gui2.USB_ISS_Helper is None:
+                raise RuntimeError(
+                    "USB-ISS transport selected but the 'usb_iss' package is not installed. "
+                    "Run: pip install usb-iss"
+                )
             self.conn = i2c_gui2.USB_ISS_Helper(port, clock, dummy_connect=False)
         else:
             self.conn = RPI_I2C_Helper()
