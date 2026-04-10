@@ -15,7 +15,12 @@ from fastapi.templating import Jinja2Templates
 
 try:
     from .i2c_gui2_helpers import i2c_connection
-except ImportError:
+except ImportError as _exc:
+    # Only fall back to the non-relative import when the helpers module itself
+    # wasn't found (i.e. running as a script rather than as a package).
+    # Re-raise for any other ImportError so dependency problems surface clearly.
+    if "i2c_gui2_helpers" not in str(_exc):
+        raise
     from i2c_gui2_helpers import i2c_connection
 
 

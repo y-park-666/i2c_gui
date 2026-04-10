@@ -34,6 +34,21 @@ source .venv/bin/activate
 pip install -r helpers/browser_requirements.txt
 ```
 
+`i2c_gui2` is not on PyPI — you need to install it from wherever it already lives on your Pi:
+```bash
+# Find it first
+find ~ -name "i2c_gui2" -type d 2>/dev/null
+
+# Then install from its parent site-packages directory, e.g.:
+pip install --no-deps <path-to-site-packages-containing-i2c_gui2>
+# e.g. pip install --no-deps ~/tamalero/lib/python3.8/site-packages/i2c_gui2
+```
+
+Or if it is already installed system-wide, recreate the venv with access to system packages:
+```bash
+python3 -m venv --system-site-packages .venv
+```
+
 > The `.venv` folder is gitignored. You only need to create it once.
 > On subsequent sessions just run `source .venv/bin/activate` before starting the server.
 
