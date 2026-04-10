@@ -32,15 +32,22 @@ class _Var:
     """Headless replacement for tk.StringVar."""
     def __init__(self, value="", name="", master=None, **kw):
         self._v = str(value)
+        self._write_callbacks = []
 
     def get(self):
         return self._v
 
     def set(self, v):
         self._v = str(v)
+        for cb in self._write_callbacks:
+            try:
+                cb(None, None, None)
+            except Exception:
+                pass
 
-    def trace_add(self, *a, **kw):
-        pass
+    def trace_add(self, mode, callback, **kw):
+        if mode == 'write':
+            self._write_callbacks.append(callback)
 
 class Address_Space_Controller:
     def __init__(
