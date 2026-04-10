@@ -29,9 +29,9 @@ TEMPLATE_DIR = BASE_DIR / "templates"
 ARTIFACT_ROOT = BASE_DIR / "output" / "browser_batches"
 ARTIFACT_ROOT.mkdir(parents=True, exist_ok=True)
 
-DEFAULT_CHIP_NAMES = "ET2p03_Bare19,ET2p03_Bare20,ET2p03_Bare21,ET2p03_Bare22"
-DEFAULT_CHIP_ADDRESSES = "0x60,0x61,0x62,0x63"
-DEFAULT_WS_ADDRESSES = "None,None,None,None"
+DEFAULT_CHIP_NAMES = "chip_name"
+DEFAULT_CHIP_ADDRESSES = "0x60"
+DEFAULT_WS_ADDRESSES = "None"
 
 
 @dataclass
