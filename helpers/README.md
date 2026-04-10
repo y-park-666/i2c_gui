@@ -16,7 +16,7 @@ Use this when you want script-based measurement without the browser UI.
 
 Example:
 ```bash
-cd /home/pyoun/mtd-projects/hybrids_test/i2c_gui_i2c_gui_2
+cd <repo root>
 python helpers/i2c_test_with_rpi.py
 ```
 
@@ -27,8 +27,8 @@ Use this when you want to launch measurement from a browser and see results as p
 
 Install browser dependencies:
 ```bash
-cd /home/pyoun/mtd-projects/hybrids_test/i2c_gui_i2c_gui_2
-python -m pip install -r helpers/browser_requirements.txt
+cd <repo root>
+pip install -r helpers/browser_requirements.txt
 ```
 
 Start the server:
@@ -53,30 +53,39 @@ http://<raspberry-pi-ip>:8000
 
 ## Python dependencies
 
-### Required for Raspberry Pi I2C measurement
-Install:
+### One-step install for the browser GUI (recommended)
+
+Install everything the browser GUI needs in one command:
+
 ```bash
-python -m pip install smbus2 pandas numpy tqdm
+pip install -r helpers/browser_requirements.txt
 ```
 
-### Required for browser GUI
-Install:
+This installs:
+- `fastapi` — web framework
+- `uvicorn` — ASGI server
+- `jinja2` — HTML templating
+- `python-multipart` — required for FastAPI form parsing (the `/start` endpoint will crash without this)
+- `pandas` — measurement DataFrames
+- `numpy` — numeric operations
+- `tqdm` — progress bars during calibration
+
+### Required for Raspberry Pi I2C backend
 ```bash
-python -m pip install fastapi uvicorn jinja2
+pip install smbus2
 ```
 
 ### Required if you want static PNG plot export
-The helper still supports saving PNG figures in addition to JSON/CSV/SQLite.
+The helper supports saving PNG figures in addition to JSON/CSV/SQLite. These are **not** included in `browser_requirements.txt` because they are large and only needed for archival PNGs.
 
-Install:
 ```bash
-python -m pip install matplotlib mplhep hist
+pip install matplotlib mplhep hist
 ```
 
 ### Required by the ETROC helper stack
 Depending on your environment, you may also need the ETROC/I2C package used by these helpers:
 ```bash
-python -m pip install usb-iss
+pip install usb-iss
 ```
 
 If `i2c_gui2` is not installed from pip because it is a local package in your environment, make sure the Python environment you use on the Pi can import it.
@@ -113,7 +122,13 @@ i2cdetect -y 1
 ### `ModuleNotFoundError: fastapi`
 Install:
 ```bash
-python -m pip install fastapi uvicorn jinja2
+pip install fastapi uvicorn jinja2 python-multipart
+```
+
+### `RuntimeError: Form data requires "python-multipart" to be installed`
+FastAPI cannot parse the `/start` form without this package:
+```bash
+pip install python-multipart
 ```
 
 ### `ModuleNotFoundError: smbus2`

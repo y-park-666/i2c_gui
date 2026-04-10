@@ -1,3 +1,15 @@
+# Browser GUI runtime dependencies
 fastapi
 uvicorn
 jinja2
+python-multipart
+
+# Measurement helper layer
+pandas
+numpy
+tqdm
+
+# Optional: static PNG export (baseline/noise-width 2D maps and histograms)
+# matplotlib
+# mplhep
+# hist

@@ -207,7 +207,7 @@ def _run_job(job_id: str, config: JobConfig):
             output_dir=str(ARTIFACT_ROOT),
             save_sqlite=True,
             save_csv=True,
-            save_png=True,
+            save_png=False,
             save_json=True,
         )
 

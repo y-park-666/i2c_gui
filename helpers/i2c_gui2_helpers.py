@@ -798,8 +798,11 @@ class i2c_connection():
                 current_df.to_csv(raw_dir / f"{chip_name}_{batch['batch_id']}.csv", index=False)
 
             if save_png:
-                self.make_BL_NW_2D_maps(pivot_df, chip_name, batch["note"] or batch["batch_name"], figure_dir, timestamp)
-                self.make_BL_NW_1D_hists(current_df, chip_name, batch["note"] or batch["batch_name"], figure_dir, timestamp)
+                try:
+                    self.make_BL_NW_2D_maps(pivot_df, chip_name, batch["note"] or batch["batch_name"], figure_dir, timestamp)
+                    self.make_BL_NW_1D_hists(current_df, chip_name, batch["note"] or batch["batch_name"], figure_dir, timestamp)
+                except ImportError as exc:
+                    logging.getLogger(__name__).warning("PNG export skipped — optional dependency missing: %s", exc)
 
         if save_json:
             with open(json_dir / "batch_summary.json", "w", encoding="utf-8") as outfile:
