@@ -1,3 +1,11 @@
+# Kick start
+```
+  cd ~/i2c_gui                                                                                                                                                                                                                              
+  source /opt/python-envs/i2c_etroc/bin/activate
+  uvicorn helpers.browser_gui:app --host 0.0.0.0 --port 8000     
+```
+
+
 # Helpers README
 
 This folder contains the Raspberry Pi measurement helpers and the browser-based localhost GUI for ETROC2 baseline and noise-width measurements.
